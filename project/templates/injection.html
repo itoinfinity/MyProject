@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Check Injection Page{% endblock %}
+
+{% block content %}
+    <h2>Check Injection Page  (for demo purposes only)</h2>
+    <form id="injectionForm">
+        <label for="ip">Enter IP:</label>
+        <input type="text" id="ip" name="ip" required>
+        
+        <label for="value">Enter a value:</label>
+        <input type="text" id="value" name="value" required>
+
+        <select id="city" name="city" required onchange="updateLocation()" class="form-control select2">
+            <option value="" disabled selected>Select a city</option>
+        </select>
+
+        <label for="lat">Latitude:</label>
+        <input type="text" id="lat" name="lat" required>
+        
+        <label for="lng">Longitude:</label>
+        <input type="text" id="lng" name="lng" required>
+        
+        <label for="country">Country:</label>
+        <input type="text" id="country" name="country" required >
+        
+        <button type="button" onclick="checkInjection()">Check Injection</button>
+    </form>
+
+    <div id="resultContainer">
+        <h3>Result:</h3>
+        <div id="resultContent"></div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#city').select2({
+                placeholder: 'Select a city',
+                ajax: {
+                    url: function (params) {
+                        return '/get_cities/?city=' + params.term;
+                    },
+                    dataType: 'json',
+                    minimumInputLength: 4,
+                    processResults: function(data) {
+                        return {
+                            results: data.map(function(city) {
+                                return { id: city.city, text: city.city+','+city.country };
+                        })
+                    };
+                    },
+                    cache: true
+                }
+            });    
+        });
+
+        function checkInjection() {
+            var formData = {
+                ip: $('#ip').val(),
+                value: $('#value').val(),
+                city: $('#city').val(),
+                lat: $('#lat').val(),
+                lng: $('#lng').val(),
+                country: $('#country').val()
+            };
+            $.ajax({
+                type: 'POST',
+                url: '/check_injection',        //http://127.0.0.1:5000/check_injection 
+                data: JSON.stringify(formData),
+                dataType: 'json',
+                contentType: 'application/json; charset=UTF-8',
+                success: function(response) {
+                    if (response.result) {
+                        $('#resultContent').html('<p style="color: red;">Injection Detected!</p>');
+                    } else {
+                        $('#resultContent').html('<p style="color: green;">No Injection Detected</p>');
+                    }
+                },
+                error: function(error) {
+                    console.error('Error:', error);
+                }
+            });
+        }
+        function updateLocation2() {
+            var formData = {
+                city: $('#city').val()
+               
+            };
+            $.ajax({
+                type: 'POST',
+                url: '/get_location', 
+                data: JSON.stringify(formData),
+                dataType: 'json',
+                contentType: 'application/json; charset=UTF-8',
+                 success: function(response) {
+                    alert(response.data);
+                    if (response.result) {
+                        $('#resultContent').html('<p style="color: red;">'+Response.data[0].city+'</p>');
+                    } else {
+                        $('#resultContent').html('<p style="color: green;">No Injection Detected</p>');
+                    }
+                }, 
+                error: function(error) {
+                    console.error('Error:', error);
+                }
+            });
+        }
+
+        function updateLocation() {
+            // Get the selected city
+            var selectedCity = document.getElementById("city").value;
+
+            // Make an API call to fetch real values based on the selected city
+            fetch('/get_location/' + selectedCity)
+                .then(response => response.json())
+                .then(data => {
+                    // Update the latitude, longitude, and country fields based on the API response
+                    document.getElementById("lat").value = data[0].lat;
+                    document.getElementById("lng").value = data[0].lng;
+                    document.getElementById("country").value = data[0].country;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+{% endblock %}

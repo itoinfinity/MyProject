@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DashBoard</title>
+    <!-- Include Plotly JS library -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- Include jQuery library -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <!------ Include the above in your HEAD tag ---------->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f9f9f9;
+            text-align: center;
+            color: #333;
+        }
+
+        h1 {
+            color: #007bff;
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0;
+            font-weight: bold;
+            color: #555;
+        }
+
+        select {
+            padding: 10px;
+            margin-bottom: 20px;
+            width: 200px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            color: #333;
+        }
+
+        .plotly-container {
+            margin: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .plotly-container h2 {
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <a class="navbar-brand text-light" href="#">Injections</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link text-light" href="/">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-light" href="/dashboard">Dashboard</a>
+                </li>
+		<li class="nav-item">
+                    <a class="nav-link text-light" href="/injection">Check Injection</a>
+                </li>
+                {% if 'user' in session %}
+                    <li class="nav-item">
+                        <a class="nav-link text-light" href="/logout">Logout</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link text-light" href="/login">Login</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <h1>Cyber Attack Incident DashBoard</h1>
+
+    <label for="year-dropdown">Select Year:</label>
+    <select id="year-dropdown" onchange="updateGraph(true)">
+        
+        {% for year in unique_years %}
+        <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+        {% endfor %}
+        <option value="all" {% if selected_year == 'all' %}{% endif %}>All Years</option>
+    </select>
+
+    <!-- User Statistics Graphs -->
+    <div class="plotly-container" id="plotly-container1">
+        <h2>Company Statistics</h2>
+        {% if bar %}
+            {{ bar | safe }}
+            {{ chloropeth | safe }}
+        {% else %}
+            Insufficient Data
+        {% endif %}
+    </div>
+
+    <!-- Sector Statistics Graphs -->
+    <label for="sector-dropdown">Select Sector:</label>
+    <select id="sector-dropdown" onchange="updateGraph(false)">
+        {% for sector in unique_sectors %}
+        <option value="{{ sector }}" {% if sector == selected_sector %}selected{% endif %}>{{ sector }}</option>
+        {% endfor %}
+    </select>
+
+    <div class="plotly-container" id="plotly-container3">
+        <h2>Sector Incident Statistics</h2>
+        {% if bar2 %}
+            {{ bar2 | safe }}
+            {{ chloropeth2 | safe }}
+        {% else %}
+            Insufficient Data
+        {% endif %}
+    </div>
+
+    <!-- Trend Graph -->
+    <div class="plotly-container" id="plotly-container5">
+        <h2>Forecast and Trend Analysis</h2>
+        {% if graph %}
+            {{ graph | safe }}
+            {{ graphcomp | safe }}
+            <p>Mean:{{ mean }}</p>
+            <p>RMSE:{{ rmse }}</p>
+        {% else %}
+            Insufficient Data
+        {% endif %}
+    </div>
+
+
+    <footer class="bg-dark text-light p-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Contact Us</h4>
+                    <p>Email: info@example.com</p>
+                    <p>Phone: +1 (123) 456-7890</p>
+                </div>
+                <div class="col-md-6 text-md-right">
+                    <h4>Follow Us</h4>
+                    <a href="#" class="text-light mr-3"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="text-light mr-3"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-light mr-3"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="text-light"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            <hr class="my-3">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <p>&copy; 2024 Your Company. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+    <script>
+        function updateGraph(value) {
+            // Get the selected year from the dropdown
+            var selectedYear = document.getElementById("year-dropdown").value;
+            var selectedSector = document.getElementById("sector-dropdown").value;
+
+            // Make an AJAX request to update the graph
+            $.get('/dashboard?sector=' + selectedSector + '&year=' + selectedYear, function (response) {
+                // Update the graph containers with the new content
+                if(value)
+                    $('#plotly-container1').html($(response).filter('#plotly-container1').html());
+                $('#plotly-container3').html($(response).filter('#plotly-container3').html());
+            });
+        }
+    </script>
+
+</body>
+
+</html>
